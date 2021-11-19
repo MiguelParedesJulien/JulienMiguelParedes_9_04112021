@@ -75,7 +75,6 @@ describe("Given I am connected as an employee", () => {
                pct: 10,
                vat: "40",
                fileName: "test.jpg",
-               //fileUrl: "https://goulven-clech.dev/test.jpg",
             };
             const handleSubmit = jest.fn((e) => newBill.handleSubmit(e));
             newBill.createBill = (newBill) => newBill;
