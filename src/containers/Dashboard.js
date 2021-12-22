@@ -26,26 +26,40 @@ export const filteredBills = (data, status) => {
 
 export const card = (bill) => {
    const firstAndLastNames = bill.email.split("@")[0];
-   const firstName = firstAndLastNames.includes(".") ? firstAndLastNames.split(".")[0] : "";
-   const lastName = firstAndLastNames.includes(".") ? firstAndLastNames.split(".")[1] : firstAndLastNames;
-
+   const firstName = firstAndLastNames.includes(".")
+     ? firstAndLastNames.split(".")[0]
+     : "";
+   const lastName = firstAndLastNames.includes(".")
+     ? firstAndLastNames.split(".")[1]
+     : firstAndLastNames;
+ 
+   const formattedDate = getFormattedDate();
+   function getFormattedDate() {
+     try {
+       return formatDate(bill.date);
+     } catch (error) {
+       return bill.date;
+     }
+   }
+   console.log(formattedDate);
+ 
    return `
-    <div class='bill-card' id='open-bill${bill.id}' data-testid='open-bill${bill.id}'>
-      <div class='bill-card-name-container'>
-        <div class='bill-card-name'> ${firstName} ${lastName} </div>
-        <span class='bill-card-grey'> ... </span>
-      </div>
-      <div class='name-price-container'>
-        <span> ${bill.name} </span>
-        <span> ${bill.amount} € </span>
-      </div>
-      <div class='date-type-container'>
-        <span> ${formatDate(bill.date)} </span>
-        <span> ${bill.type} </span>
-      </div>
-    </div>
-  `;
-};
+     <div class='bill-card' id='open-bill${bill.id}' data-testid='open-bill${bill.id}'>
+       <div class='bill-card-name-container'>
+         <div class='bill-card-name'> ${firstName} ${lastName} </div>
+         <span class='bill-card-grey'> ... </span>
+       </div>
+       <div class='name-price-container'>
+         <span> ${bill.name} </span>
+         <span> ${bill.amount} € </span>
+       </div>
+       <div class='date-type-container'>
+         <span> ${formattedDate} </span>
+         <span> ${bill.type} </span>
+       </div>
+     </div>
+   `;
+ };
 
 export const cards = (bills) => {
    return bills && bills.length ? bills.map((bill) => card(bill)).join("") : "";
@@ -130,21 +144,26 @@ export default class {
       if (this.counter === undefined || this.index !== index) this.counter = 0;
       if (this.index === undefined || this.index !== index) this.index = index;
       if (this.counter % 2 === 0) {
-         $(`#arrow-icon${this.index}`).css({ transform: "rotate(0deg)" });
-         $(`#status-bills-container${this.index}`).html(cards(filteredBills(bills, getStatus(this.index))));
-         this.counter++;
+        $(`#arrow-icon${this.index}`).css({ transform: "rotate(0deg)" });
+        $(`#status-bills-container${this.index}`).html(
+          cards(filteredBills(bills, getStatus(this.index)))
+        );
+        this.counter++;
       } else {
-         $(`#arrow-icon${this.index}`).css({ transform: "rotate(90deg)" });
-         $(`#status-bills-container${this.index}`).html("");
-         this.counter++;
+        $(`#arrow-icon${this.index}`).css({ transform: "rotate(90deg)" });
+        $(`#status-bills-container${this.index}`).html("");
+        this.counter++;
       }
-
+  
       bills.forEach((bill) => {
-         $(`#status-bills-container${index} #open-bill${bill.id}`).click((e) => this.handleEditTicket(e, bill, bills));
+        $(`#open-bill${bill.id}`).unbind("click");
+        $(`#open-bill${bill.id}`).click((e) =>
+          this.handleEditTicket(e, bill, bills)
+        );
       });
-
+  
       return bills;
-   }
+    }
 
    // not need to cover this function by tests
    /* istanbul ignore next */
