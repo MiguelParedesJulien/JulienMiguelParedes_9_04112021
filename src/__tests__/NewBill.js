@@ -6,6 +6,8 @@ import { fireEvent, screen } from "@testing-library/dom";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
 import firestore from "../app/Firestore.js";
+import firebase from "../__mocks__/firebase.js";
+import BillsUI from "../views/BillsUI.js";
 
 // Setup
 const onNavigate = () => {
@@ -94,3 +96,54 @@ describe("Given I am connected as an employee", () => {
       });
    });
 });
+
+// Test d'integration POST
+describe("Given I am a user connected as Employee", () => {
+   const bill = [
+     {
+       id: "qcCK3SzECmaZAGRrHjaC",
+       vat: "40",
+       amount: 100,
+       name: "test",
+       fileName: "fileTest.jpeg",
+       commentary: "test",
+       pct: 20,
+       type: "Transports",
+       email: "email@test.com",
+       fileUrl:
+         "https://firebasestorage.googleapis.com/v0/b/billable-677b6.a…f-1.jpg?alt=media&token=4df6ed2c-12c8-42a2-b013-346c1346f732",
+       date: "2021-11-08",
+       status: "Pending",
+     },
+   ];
+   describe("When I navigate to NewBill", () => {
+     test("fetches bill to mock API POST", async () => {
+       const getSpy = jest.spyOn(firebase, "get");
+       let bills = await firebase.get();
+       expect(getSpy).toHaveBeenCalledTimes(1);
+       expect(bills.data.length).toBe(4);
+       bills.data.push(bill);
+       expect(bills.data.length).toBe(5);
+     });
+     test("fetches bill to an API and fails with 404 message error", async () => {
+       firebase.get.mockImplementationOnce(() =>
+         Promise.reject(new Error("Erreur 405 : Method Not Allowed"))
+       );
+       const html = BillsUI({ error: "Erreur 405 : Method Not Allowed" });
+       document.body.innerHTML = html;
+       const message = await screen.getByText(/Erreur 405 : Method Not Allowed/);
+       expect(message).toBeTruthy();
+     });
+     test("fetches messages from an API and fails with 500 message error", async () => {
+       firebase.get.mockImplementationOnce(() =>
+         Promise.reject(new Error("Erreur 500 : Internal Server Error"))
+       );
+       const html = BillsUI({ error: "Erreur 500 : Internal Server Error" });
+       document.body.innerHTML = html;
+       const message = await screen.getByText(
+         /Erreur 500 : Internal Server Error/
+       );
+       expect(message).toBeTruthy();
+     });
+   });
+ });
